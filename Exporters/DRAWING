@@ -1,0 +1,249 @@
+// #region import
+import * as KRF_ from './hAtAB5kyzcg/index'
+import * as ASSETS from './8E9g8iOzk3N/index'
+// #endregion import
+
+export function generateDrawing(component: KRF_.Component) {
+  const pageWidth = 297
+  const pageHeight = 210
+  const pageMargin = 10
+  const geometry = component.generateGeometry()
+
+const contentBounds1 = new SKYCAD.Bounds2D( // adjusted so that it doesn't collide with the header
+    new SKYMATH.Vector2D(pageMargin, pageMargin),
+    new SKYMATH.Vector2D(0.5 * pageWidth, pageHeight - 3 * pageMargin),
+  )
+const contentBounds2 = new SKYCAD.Bounds2D( // adjusted so that it doesn't collide with the header
+    new SKYMATH.Vector2D(0.5 * pageWidth, pageMargin + 24),
+    new SKYMATH.Vector2D(pageWidth - 3*pageMargin, pageHeight - 3 * pageMargin - 30),
+    //new SKYMATH.Vector2D(0.66*pageWidth, pageHeight - 3 * pageMargin)
+  )
+
+  let validScales = [2]
+  for (let i = 0; i < 300; i++) validScales.push(1 / i)
+
+  //set top view
+  const properties = component.getProperties()
+  properties['view'] = 'top'  
+  component.setProperties(properties)
+  
+  // Drawing
+
+  const drawing = new SKYDRAWING.Drawing()
+  drawing.addPage(1, { pageHeight, pageWidth, margin: pageMargin })
+  const topPlane = new SKYCAD.Plane(0, 0, 1, 2000) // offset of 2000 should be enough not to collide with the geometry
+  const topLayout1 = SKYCAD.project(geometry, topPlane)
+
+    const {scale: scale1} = drawing.addContent(1, topLayout1, {
+    textSize: 3, // sets all text presented in the drawing to real size 3
+    fitInside: {
+      bounds: contentBounds1,
+      validScales,
+    },
+    align: {
+      horizontal: 'center',
+      vertical: 'center',
+      ignoreAnnotations: false, // includes or not dimensions and text in the alignment
+    },
+  })
+
+  //change view
+  changeView(component)
+
+ const geometry2 = component.generateGeometry()
+ const topLayout2 = SKYCAD.project(geometry2, topPlane)
+
+ const {scale: scale2} = drawing.addContent(1, topLayout2, {
+    textSize: 3, // sets all text presented in the drawing to real size 3
+    fitInside: {
+      bounds: contentBounds2,
+      validScales,
+    },
+    align: {
+      horizontal: 'center',
+      vertical: 'center',
+      ignoreAnnotations: false, // includes or not dimensions and text in the alignment
+    },
+  })
+
+//Ta reda på vilken scale vi ska använda
+validScales = [Math.min(scale1, scale2)]
+//rita med rätt skala
+const drawing_final = new SKYDRAWING.Drawing()
+drawing_final.addPage(1, { pageHeight, pageWidth, margin: pageMargin })
+
+changeView(component)
+
+const geometry3 = component.generateGeometry()
+const topLayout3 = SKYCAD.project(geometry3, topPlane)
+
+const {scaleLabel} = drawing_final.addContent(1, topLayout3, {
+    textSize: 3, // sets all text presented in the drawing to real size 3
+    fitInside: {
+      bounds: contentBounds1,
+      validScales,
+    },
+    align: {
+      horizontal: 'center',
+      vertical: 'center',
+      ignoreAnnotations: false, // includes or not dimensions and text in the alignment
+    },
+  })
+console.log(scale1)
+changeView(component)
+const geometry4 = component.generateGeometry()
+const topLayout4 = SKYCAD.project(geometry4, topPlane)
+
+drawing_final.addContent(1, topLayout4, {
+    textSize: 3, // sets all text presented in the drawing to real size 3
+    fitInside: {
+      bounds: contentBounds2,
+      validScales,
+    },
+    align: {
+      horizontal: 'center',
+      vertical: 'center',
+      ignoreAnnotations: false, // includes or not dimensions and text in the alignment
+    },
+  })
+  let BOM = ''
+  for (let i = 0; i < 10; i++) {
+    let randint = getRandomInt(10)
+    BOM = BOM + randint.toString()
+  }
+  
+  //const title = 'BOM: ' + BOM
+  const title = BOM
+  const KRF = component.getProperty('KRF')
+  const headerLayout = generateHeaderLayout({
+    title: title,
+    pageNr: 1,
+    nPages: drawing.getPages().length,
+    scale: `${scaleLabel} (A4)`,
+  })
+  
+  const bomLayout = generateBomLayout(component,KRF)
+  drawing_final.addContent(1, bomLayout, { align: { vertical: 'top', horizontal: 'right' } })
+
+  drawing_final.setHeader(1, headerLayout)
+
+  return drawing_final
+}
+
+export function generateHeaderLayout(
+  args: {
+    scale?: string
+    nPages?: number
+    pageNr?: number
+    title?: string
+    units?: string
+    logoMaxWidth?: number
+  } = {},
+) {
+  const scale = args.scale ?? '1:1'
+  const pageNr = args.pageNr ?? 1
+  const nPages = args.nPages ?? 1
+  const units = args.units ?? 'mm'
+  const title = args.title ?? 'title'
+  const logoMaxWidth = args.logoMaxWidth ?? Infinity
+
+  const defaultTextSize = 3
+  const table = new SKYCAD.Table({ defaultTextSize, columnWidths: [] })
+
+  let tableRow = 0
+
+  table.addText('', tableRow, 0, { rowspan: 3 })
+  table.addText(units, tableRow, 1, { label: 'Units' })
+
+  tableRow++
+  table.addText(scale, tableRow, 1, { label: 'Scale' })
+
+  tableRow++
+  table.addText(getCurrentDateISO(), tableRow, 1, { label: 'Date' })
+
+  tableRow++
+  table.addText(title, tableRow, 0, { label: 'BOM Number' })
+  table.addText(`${pageNr} / ${nPages}`, tableRow, 1, { label: 'Page' })
+
+  const defaultRowHeight = defaultTextSize * 2
+  for (let i = 0; i < tableRow; i++) table.setRowHeight(i, defaultRowHeight)
+
+  const logo = ASSETS.IMAGES.ELPRESS
+
+  if (logo === undefined) {
+    // to use a logo, upload your logo to the dashboard, use it as shown above
+    // and you can then also remove this if-case as logo will not be undefined
+    table.addText('Company Logo', 0, 0, { rowspan: 3, size: 6 })
+
+    const headerLayout = table.generateLayout()
+
+    return headerLayout
+  }
+  const logoCellPadding = 3
+
+  const logoCellWidth = Math.min(logoMaxWidth, logo.width) - 2 * logoCellPadding
+  const logoCellHeight = defaultRowHeight * 3 - 2 * logoCellPadding
+
+  const logoScale = Math.min(logoCellWidth / logo.width, logoCellHeight / logo.height)
+
+  const logoWidthScaled = logo.width * logoScale
+  const logoHeightScaled = logo.height * logoScale
+
+  table.setColumnWidth(0, logoWidthScaled + 2 * logoCellPadding)
+
+  const headerLayout = table.generateLayout()
+  const headerSize = headerLayout.getBounds().getSize()
+
+  headerLayout.addImage(logo, {
+    position: new SKYMATH.Vector2D(
+      logoCellPadding,
+      headerSize.y - logoCellPadding - (logoCellHeight + logoHeightScaled) / 2,
+    ),
+    scale: logoScale,
+  })
+
+  return headerLayout
+}
+function getCurrentDateISO() {
+  const now = new Date()
+  const isoString = now.toISOString()
+  const datePart = isoString.split('T')[0]!
+  return datePart
+}
+
+function changeView(component){
+  const properties = component.getProperties()
+  const view = properties['view']
+  if(view=='side') properties['view']='top'
+  else  properties['view'] = 'side'  
+  component.setProperties(properties)
+}
+
+
+function generateBomLayout(component,KRF) {
+ // Refresh the page (F5) to reload the Intellisense if this is still highlighted in red. Make sure you published Assembly.
+
+  const table = new SKYCAD.Table({
+    defaultTextSize: 5,
+    columnWidths: [60],
+    rowHeights: [10, 10, 10]
+ 
+  })
+
+  let rowNr = 0
+  const KRF_STRING = KRF.substring(4,7)
+  // Title row
+  table.addText(KRF_STRING+ ' mm2', 0, 0, {label:'Area'})
+  table.addText('CU', 1, 0, {label:'Material'})
+  table.addText(KRF, 2,0, {label: 'Type'})
+  rowNr++
+  
+
+
+
+  const layout = table.generateLayout()
+  return layout
+}
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
