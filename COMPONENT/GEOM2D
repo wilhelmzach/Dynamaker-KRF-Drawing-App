@@ -1,0 +1,687 @@
+// #region import
+import * as ASSETS from './8E9g8iOzk3N/index'
+import * as CONSTANTS from './constants.js'
+// #endregion import
+
+export function generateSideDrawingDimensions({
+    A,
+    angle,
+    d,
+    D,
+    diagonalEnd,
+    holeQty,
+    L,
+    N,
+    N1,
+    P,
+    W,
+    CC,
+    t,
+    O,
+    screwDiameter
+}) {
+  // @dm-autofold
+  const layout = new SKYCAD.Layout({ defaultDimensionContinuousLines: true })
+
+  const textSize = (angled(A,angle)+P)/80+1.5
+  const offset = textSize
+
+  const PlateDimensions = new SKYCAD.Layout
+  if (holeQty > 0) {
+    PlateDimensions.addDimension(new SKYMATH.Vector2D(0, 0), new SKYMATH.Vector2D(N1, 0), {
+    text: `${N1}`,
+    textSize,
+    decimals: 0,
+    offset: 10 + offset,
+    textRotation: 0,
+    extendLinesToTarget: true,
+  })
+      PlateDimensions.addDimension(new SKYMATH.Vector2D(N1 - screwDiameter/2, 0), new SKYMATH.Vector2D(N1+ O + screwDiameter/2, 0), {
+      text: `${O + screwDiameter}`,
+      textSize,
+      decimals: 0,
+      offset: -(10 + offset),
+      textRotation: 0,
+      extendLinesToTarget: true,
+    })
+  }
+    if (holeQty==1) {
+      PlateDimensions.addDimension(new SKYMATH.Vector2D(N1 + O, 0), new SKYMATH.Vector2D(N + N1+ O, 0), {
+      text: `${N}`,
+      textSize,
+      decimals: 0,
+      offset: (10 + offset),
+      textRotation: 0,
+      extendLinesToTarget: true,
+    })
+  }
+  if (holeQty==2) {
+    PlateDimensions.addDimension(new SKYMATH.Vector2D(N1 + O, 0), new SKYMATH.Vector2D(N1 + CC + O, 0), {
+    text: `${CC}`,
+    textSize,
+    decimals: 0,
+    offset: 10 + offset,
+    textRotation: 0,
+    extendLinesToTarget: true,
+    })
+    PlateDimensions.addDimension(new SKYMATH.Vector2D(N1 + CC + O, 0), new SKYMATH.Vector2D(N + CC + N1 + O, 0), {
+    text: `${N}`,
+    textSize,
+    decimals: 0,
+    offset: (10 + offset),
+    textRotation: 0,
+    extendLinesToTarget: true,
+    })
+      PlateDimensions.addDimension(new SKYMATH.Vector2D(N1 + CC + O - screwDiameter/2, 0), new SKYMATH.Vector2D(N1+ CC + O + screwDiameter/2, 0), {
+      text: `${screwDiameter}`,
+      textSize,
+      decimals: 0,
+      offset: -(10 + offset),
+      textRotation: 0,
+      extendLinesToTarget: true,
+    })
+  }
+  PlateDimensions.addDimension(new SKYMATH.Vector2D(0, -offset), new SKYMATH.Vector2D(P, -offset), {
+  text: `${Math.round(P*10)/10}`,
+  textSize,
+  decimals: 0,
+  offset: 10 + offset * 5,
+  textRotation: 0,
+  })
+  PlateDimensions.addDimension(new SKYMATH.Vector2D(P, 0), new SKYMATH.Vector2D(P, -t), {
+  text: `${t}`,
+  textSize,
+  decimals: 0,
+  offset: offset,
+  textRotation: 0,
+  })
+
+  PlateDimensions.rotate(Math.PI/180*angle)
+  PlateDimensions.translate(diagonalEnd, D/2)
+  layout.addLayout(PlateDimensions)
+
+
+  layout.addDimension(new SKYMATH.Vector2D(0, d/2), new SKYMATH.Vector2D(0, -d/2), {
+    text: `${d}`,
+    textSize,
+    decimals: 0,
+    offset: offset,
+    textRotation: -Math.PI / 2,
+    extendLinesToTarget: true,
+  })
+  layout.addDimension(new SKYMATH.Vector2D(offset*2.5, D/2), new SKYMATH.Vector2D(offset*2.5, -D/2), {
+    text: `${D}`,
+    textSize,
+    decimals: 0,
+    offset: 0,
+    textRotation: -Math.PI/2,
+    extendLinesToTarget: true,
+  })
+  layout.addDimension(new SKYMATH.Vector2D(0, D/2), new SKYMATH.Vector2D(A, D/2), {
+    text: `${A}`,
+    textSize,
+    decimals: 0,
+    offset: offset,
+    textRotation: -Math.PI/2,
+    extendLinesToTarget: true,
+  })
+  //liten linje längst ner
+  const linjeSketch = new SKYCAD.Sketch()
+  linjeSketch.moveTo(0, d/2)
+  linjeSketch.lineTo(0, D/2)
+  layout.addSketch(linjeSketch)
+
+  layout.rotate(Math.PI/2)
+  return layout
+}
+
+export function generateSideLayout({
+    A,
+    angle,
+    d,
+    D,
+    diagonalEnd,
+    diagonalStart,
+    holeQty,
+    N,
+    N1,
+    openingOffset,
+    P,
+    radius,
+    roundingOffset,
+    screwDiameter,
+    t,
+    W,
+    CC,
+    O
+}) {
+  // @dm-autofold
+  const layout = new SKYCAD.Layout()
+
+  const angledPy = P * Math.cos(Math.PI / 180 * angle)
+  const angledTy = t * Math.sin(Math.PI / 180 * angle)
+  const angledPx = P * Math.sin(Math.PI / 180 * angle)
+  const angledTx = t * Math.cos(Math.PI / 180 * angle)
+  const angledNx = N * Math.sin(Math.PI / 180 * angle)
+  const angledNy = N * Math.cos(Math.PI / 180 * angle)
+  
+  let large_angle_fix_x = 0
+  if (angle > 45) {large_angle_fix_x = D/2*Math.sin((Math.PI/180*angle - Math.PI/4)*2)}
+  const large_angle_fix_y = large_angle_fix_x * Math.tan(Math.PI/180*(90-angle))
+  //flytta diagonalstart för stora vinklar
+  const x_avstand = D/2 - (-D / 2 + angledTx + large_angle_fix_x)
+  const y_avstand = x_avstand //får 45 graders vinkel
+  const diagonalStart_flytt = diagonalEnd + angledTy - large_angle_fix_y - y_avstand - diagonalStart
+  
+
+  const mainSketch = new SKYCAD.Sketch()
+  mainSketch.moveTo(-d / 2, 0)
+  mainSketch.lineTo(-D / 2, openingOffset)
+  mainSketch.lineTo(-D/2, diagonalEnd)
+  mainSketch.lineTo(-D/2 - angledPx, diagonalEnd + angledPy)
+  mainSketch.lineTo(-D / 2 -angledPx + angledTx, diagonalEnd + angledPy + angledTy)
+  mainSketch.lineTo(-D / 2 + angledTx + large_angle_fix_x, diagonalEnd + angledTy - large_angle_fix_y)
+  mainSketch.lineTo(D / 2, diagonalStart + diagonalStart_flytt)
+  mainSketch.lineTo(D / 2, openingOffset)
+  mainSketch.lineTo(d / 2, 0)
+  mainSketch.lineToId(0)
+
+  mainSketch.addFillet(2, 5)
+  mainSketch.addFillet(2, 6)
+
+  layout.addSketch(mainSketch)
+
+  const vinkel = new SKYCAD.Sketch
+  vinkel.moveTo(-D/2,diagonalEnd+angledTx*2)
+  vinkel.lineTo(-D/2,diagonalEnd + (angledTx)*2+20)
+  vinkel.curveTo(-D/2-angsin(20,45),diagonalEnd + (angledTx)*2+ang(20,45),{radius:20})
+  //layout.addSketch(vinkel)
+
+
+  const sThick = new SKYCAD.Sketch()
+  sThick.moveTo(-D / 2, openingOffset)
+  sThick.curveTo(D / 2, openingOffset, { clockwise: true, radius: W * 2 })
+  layout.addSketch(sThick)
+
+  const sThin = new SKYCAD.Sketch()
+  sThin.moveTo(-D / 2, diagonalStart + diagonalStart_flytt - 0.5)
+  sThin.curveTo(D / 2, diagonalStart + diagonalStart_flytt - 0.5, { radius: D / 1.5 })
+  layout.addSketch(sThin, { lineThickness: CONSTANTS.thinLineThickness })
+
+  const lineOverlap = 1
+  const angledlineOverlapx = lineOverlap * Math.cos(Math.PI/180*angle)
+  const angledlineOverlapy = lineOverlap * Math.sin(Math.PI/180*angle)
+
+  const hole1 = new SKYCAD.Sketch() //det ovala
+  const hole2 = new SKYCAD.Sketch() //längst ut vid två hål
+  const hole_center1 = new SKYCAD.Sketch()
+  const hole_center2 = new SKYCAD.Sketch()
+  if (holeQty !=2) {CC = 0}
+
+  let thickness = 1
+  //if (O == 0) {
+  //hole1.moveTo(-D / 2 - lineOverlap, L - N - CC -  O/2)
+  //hole1.lineTo(-D / 2 + t + lineOverlap, L - N - CC - O/2)
+  //}
+  hole1.moveTo(-D / 2,  - N - CC -  O - screwDiameter/2)
+  hole1.lineTo(-D / 2 + t ,  - N - CC -  O - screwDiameter/2)
+  hole1.moveTo(-D / 2,  - N - CC + screwDiameter/2)
+  hole1.lineTo(-D / 2 + t,  - N - CC + screwDiameter/2)
+
+  hole2.moveTo(-D / 2,  - N - screwDiameter/2)
+  hole2.lineTo(-D / 2 + t,  - N - screwDiameter/2)
+  hole2.moveTo(-D / 2,  - N + screwDiameter/2)
+  hole2.lineTo(-D / 2 + t,  - N + screwDiameter/2)
+
+  hole_center2.moveTo(-D / 2-lineOverlap,  - N)
+  hole_center2.lineTo(-D / 2 + t+lineOverlap,  - N)
+  hole_center1.moveTo(-D / 2-lineOverlap,  - N - CC-O/2)
+  hole_center1.lineTo(-D / 2 + t+lineOverlap,  - N - CC-O/2)
+  
+  hole_center1.translate(D/2 + lineOverlap, N)
+  hole_center1.rotate(Math.PI/180*angle)
+  hole_center1.translate(-D/2 - angledPx - angledlineOverlapx + angledNx, diagonalEnd + angledPy - angledlineOverlapy - angledNy)
+  hole_center2.translate(D/2 + lineOverlap, N)
+  hole_center2.rotate(Math.PI/180*angle)
+  hole_center2.translate(-D/2 - angledPx - angledlineOverlapx + angledNx, diagonalEnd + angledPy - angledlineOverlapy - angledNy)
+  hole1.translate(D/2 + lineOverlap, N)
+  hole1.rotate(Math.PI/180*angle)
+  hole1.translate(-D/2 - angledPx - angledlineOverlapx + angledNx, diagonalEnd + angledPy - angledlineOverlapy - angledNy)
+  hole2.translate(D/2 + lineOverlap, N)
+  hole2.rotate(Math.PI/180*angle)
+  hole2.translate(-D/2 - angledPx - angledlineOverlapx + angledNx, diagonalEnd + angledPy - angledlineOverlapy - angledNy)
+  if (holeQty > 0) {layout.addSketch(hole1, {lineThickness: 0.5})}
+  if (holeQty ==2) {layout.addSketch(hole2, {lineThickness: 0.5})}
+  if (holeQty>0) layout.addSketch(hole_center1,{lineThickness: 0.2})
+  if (holeQty ==2) {layout.addSketch(hole_center2,{lineThickness: 0.2})}
+  //layout.rotate(-Math.PI/2)
+  return layout
+}
+export function getSideData({D,d,L,W,N1,N,screwDiameter,holeQty,CC,angle,view,A, t,PN,O}) {
+  let P = N + O
+  if (holeQty>0) P += N1
+  if(holeQty>1) P+=CC
+  if(holeQty==0) P = PN
+
+
+  const roundingOffset = W / 12
+  const diagonalEnd = A
+  const diagonalStart = A - (D-Math.sqrt(2)*t)
+  const radius = Math.abs(
+    -roundingOffset - (1 * (-(-W / 2) / 2)) / (roundingOffset / (W / 2)) + roundingOffset / 2,
+  )
+  const openingOffset = D / 20
+  t = get_t(W,d,D)
+
+  return {
+    A,
+    angle,
+    d,
+    D,
+    diagonalEnd,
+    diagonalStart,
+    holeQty,
+    L,
+    N,
+    N1,
+    openingOffset,
+    P,
+    radius,
+    roundingOffset,
+    screwDiameter,
+    t,
+    W,
+    CC,
+    O
+  }
+}
+export function getData({D,d,L,W,N1,N,screwDiameter,holeQty,CC,angle,view,A, t,KRF,PN,O, inspection}) {
+  let P = N 
+  if (holeQty>0) P += N1
+  if (holeQty > 1) P += CC
+  if (O>0) P+=O
+  if (holeQty == 0) P = PN
+  const angA = A*Math.cos((angle*Math.PI)/180)
+  const a1 = D/2
+  const b1 = angsin(D/2,angle) 
+  const a2 = d/2
+  const b2 = angsin(d/2,angle)
+  const DATA = ASSETS.DATASETS.DATA
+  const data = DATA.find((row) => {
+    return row.KRF_TYPE === KRF
+      })
+  const pipe_thickness = (data.D-data.d)/2
+  const ellipse_offset = b1+ang(pipe_thickness*1.4,angle)
+  const offset = angsin(pipe_thickness,angle)
+  const start = b1+b2 + offset
+  //P+=offset
+  const roundingOffset = W/6
+  const topCorner = start + P + angA - roundingOffset +offset
+  let diagonalEnd = start+angA+ roundingOffset+offset
+  const circle_1 = angA + start +N1+offset
+  const diagonalStart = angA +start-D/2   // Slutet av röret
+  const h = b1
+  let rad = h/2 + D*D/8/h
+  if (angle == 0) {rad = 10000}
+    //const diagonalStart = angA +start-d/2
+  const topRadius = Math.abs(
+    -roundingOffset - (1 * (-(-W / 2) / 2)) / (roundingOffset / (W / 2)) + roundingOffset / 2,
+    )
+  const roundingOffsetThin = ang(W,angle) /6
+  const radiusThin = Math.abs(
+    -roundingOffsetThin - (1 * (-(-W / 2) / 2)) / (roundingOffsetThin / (W / 2)) + roundingOffsetThin / 2,
+    )
+  const angled_P = ang(P,angle)
+  const P_offset = offset*(1-ang(1,angle))
+  const radius = Math.abs(
+    -roundingOffset -(1*(-(-W / 2) / 2)) / (roundingOffset / (W / 2)) + roundingOffset / 2,
+    )
+  t = get_t(W,d,D)
+  return {
+    d,
+    D,
+    angle,
+    diagonalEnd,
+    diagonalStart,
+    holeQty,
+    L,
+    N,
+    N1,
+    P,
+    topRadius,
+    roundingOffset,
+    screwDiameter,
+    t,
+    topCorner,
+    W,
+    CC,
+    A,
+    angA,
+    a1,
+    b1,
+    a2,
+    b2,
+    ellipse_offset,
+    radiusThin,
+    rad,
+    O,
+    inspection,
+    start,
+    angled_P,
+    P_offset,
+    radius,
+    circle_1,
+    offset
+  }
+}
+
+export function generateTopDrawingDimensions({
+    d,
+    D,
+    angle,
+    diagonalEnd,
+    diagonalStart,
+    holeQty,
+    L,
+    N,
+    N1,
+    P,
+    roundingOffset,
+    screwDiameter,
+    t,
+    topCorner,
+    W,
+    CC,
+    A,
+    angA,
+    a1,
+    b1,
+    a2,
+    b2,
+    ellipse_offset,
+    rad,
+    O,
+    start,
+    circle_1,
+    offset
+}) {
+  // @dm-autofold
+  const layout = new SKYCAD.Layout({ defaultDimensionContinuousLines: true })
+  const textSize = 1.5+(angA+P)/80
+  const dimension_offset = textSize+2
+
+  const layoutHole = new SKYCAD.Layout()
+
+  const O_offset = (3*dimension_offset+W/2)
+  if (O>0 && holeQty>0){
+    layoutHole.addDimension(new SKYMATH.Vector2D(start+N1, 0), new SKYMATH.Vector2D(start + O + N1, 0), {
+      text: `${O}`,
+      textSize,
+      decimals: 0,
+      offset: O_offset,
+      textRotation: Math.PI/2,
+      extendLinesToTarget: true,
+    })
+  }
+  layout.addDimension(new SKYMATH.Vector2D(start+angA+offset,0), new SKYMATH.Vector2D(start+angA+P+offset, 0), {
+    text: `${Math.round(P*10)/10}`, 
+    textSize,
+    decimals: 0,
+    offset: (W / 2 + 3*(dimension_offset+2)),
+    textRotation: 0,
+    extendLinesToTarget: true,
+  })
+  
+
+  if (angle<89) {
+  layout.addDimension(new SKYMATH.Vector2D(b1+b2,0), new SKYMATH.Vector2D(start+angA+offset, 0), {
+    text: `${Math.round((A)*10)/10}`, 
+    textSize,
+    decimals: 0,
+    offset: (W / 2 + dimension_offset+2),
+    textRotation: 0,
+    extendLinesToTarget: true,
+    })
+  }
+  if (holeQty>1){
+      layoutHole.addDimension(new SKYMATH.Vector2D(P+start-N-CC, 0), new SKYMATH.Vector2D(P+start-N, 0), {
+      text: `${CC}`,
+      textSize,
+      decimals: 0,
+      offset: W / 2 + 3*dimension_offset,
+      textRotation: Math.PI/2,
+      extendLinesToTarget: true,
+      })
+      layoutHole.addDimension(new SKYMATH.Vector2D(P+start-N-CC-N1-O, 0), new SKYMATH.Vector2D(P+start-N-CC-O, 0), {
+      text: `${N1}`,
+      textSize,
+      decimals: 0,
+      offset: W / 2 + 3*dimension_offset,
+      textRotation: Math.PI/2,
+      extendLinesToTarget: true,
+    })
+  }
+  if (holeQty>0){
+    layoutHole.addDimension(new SKYMATH.Vector2D(start+P-N, 0), new SKYMATH.Vector2D(start+P, 0), {
+    text: `${N}`,
+    textSize,
+    decimals: 0,
+    offset: W / 2 + 3*dimension_offset,
+    textRotation: Math.PI/2,
+    extendLinesToTarget: true,
+    })
+  }
+  if (holeQty==1){
+    layoutHole.addDimension(new SKYMATH.Vector2D(P+start-N-N1-O, 0), new SKYMATH.Vector2D(P+start-N-O, 0), {
+      text: `${N1}`,
+      textSize,
+      decimals: 0,
+      offset: W / 2 + 3*dimension_offset,
+      textRotation: Math.PI/2,
+      extendLinesToTarget: true,
+    })
+  }
+  layout.addDimension(new SKYMATH.Vector2D(P+start+angA-roundingOffset + offset, -W/2), new SKYMATH.Vector2D(P+start+angA-roundingOffset + offset, W/2), {
+    text: `${W}`,
+    textSize,
+    decimals: 0,
+    offset: -5-dimension_offset,
+    textRotation: -Math.PI / 2,
+    extendLinesToTarget: true,
+  })
+  layoutHole.translate(angA+offset,0)
+  layout.addLayout(layoutHole)
+
+  layout.addDimension(new SKYMATH.Vector2D(b1, -d/2), new SKYMATH.Vector2D(b1, d/2), {
+    text: `${d}`,
+    textSize,
+    decimals: 0,
+    offset: 0,
+    textRotation: -Math.PI / 2,
+    extendLinesToTarget: true,
+  })
+  layout.addDimension(new SKYMATH.Vector2D(ellipse_offset, D/2), new SKYMATH.Vector2D(ellipse_offset, -D/2), {
+    text: `${D}`,
+    textSize,
+    decimals: 0,
+    offset: -dimension_offset -D/2,
+    textRotation: -Math.PI / 2,
+    extendLinesToTarget: true,
+  })
+  layout.rotate(Math.PI/2)
+  return layout
+
+}
+export function generateTopLayout({
+  d,
+  D,
+  W,
+  diagonalEnd,
+  topCorner,
+  topRadius,
+  A,
+  holeQty,
+  L,
+  N,
+  screwDiameter,
+  CC,
+  t,
+  angle,
+  angA,
+  P,
+  N1,
+  diagonalStart,
+  a1,
+  b1,
+  a2,
+  b2,
+  ellipse_offset,
+  radiusThin,
+  rad,
+  O,
+  inspection,
+  start,
+  radius,
+  openingOffset,
+  circle_1,
+  offset
+}) {
+  // @dm-autofold
+  const layout = new SKYCAD.Layout()
+
+  const mainSketch = new SKYCAD.Sketch()
+  
+  const ellips1 = SKYCAD.generateEllipseSketch(a1, b1)
+  ellips1.translate(0, ellipse_offset)
+  
+  const ellips2 = SKYCAD.generateEllipseSketch(a2, b2)
+  ellips2.translate(0, b1)
+  const subtractionSketch = SKYCAD.generateSketchSubtraction(ellips1, ellips2)
+  subtractionSketch.mergeSketch(ellips2)
+  mainSketch.mergeSketch(subtractionSketch)
+
+  mainSketch.moveTo(-d/2,b1)
+  mainSketch.lineTo(-D / 2, ellipse_offset)
+  if(angle!=90){ mainSketch.lineTo(-D / 2, diagonalStart)}
+  mainSketch.lineTo(-W / 2, diagonalEnd)
+  mainSketch.lineTo(-W / 2, topCorner)
+
+  mainSketch.curveTo(W / 2, topCorner , { clockwise: true, radius:topRadius })
+  mainSketch.lineTo(W / 2, diagonalEnd)
+  mainSketch.lineTo(D / 2, diagonalStart)
+  mainSketch.lineTo(D / 2, ellipse_offset)
+  mainSketch.lineTo(d/2,b1)
+  layout.addSketch(mainSketch)
+
+  //Rita en till halvcirkel (Torins linje)
+  const halvc_sketch = new SKYCAD.Sketch()
+  const startpoint_x = -D/2 - (W/2 - D/2)*0.2
+  const startpoint_y = diagonalStart + (diagonalEnd-diagonalStart)*0.2
+  const start_point = new SKYMATH.Vector2D(startpoint_x, startpoint_y)
+  halvc_sketch.moveTo(start_point)
+  const halvc_h = angA+offset + start - startpoint_y
+  const halvc_bredd = -startpoint_x*2
+  const halvc_rad = halvc_h/2 + halvc_bredd*halvc_bredd/8/halvc_h
+  halvc_sketch.curveTo(D/2 + (W/2 - D/2)*0.2, diagonalStart + (diagonalEnd - diagonalStart)*0.2, {radius: halvc_rad, clockwise: true})
+  if (angle>0) layout.addSketch(halvc_sketch)
+
+  if (holeQty > 0) {
+    const el2 = SKYCAD.generateCircleSketch(0,circle_1+O ,screwDiameter)
+
+    if (O>0){
+      const el22 = SKYCAD.generateCircleSketch(0,circle_1,screwDiameter)
+      el2.mergeSketch(el22)
+      const rect = SKYCAD.generateRectangleSketch(screwDiameter/2, circle_1, -screwDiameter, O)
+      const holesketch = SKYCAD.generateSketchUnion(rect,el2)
+      layout.addSketch(holesketch)
+    }
+    else {layout.addSketch(el2)}
+  }
+  if (holeQty>1) {
+    //const el1 = SKYCAD.generateCircleSketch(0,ellipse1_x + O-screwDiameter + CC,screwDiameter)
+    const el1 = SKYCAD.generateCircleSketch(0,circle_1+ O + CC,screwDiameter)
+    layout.addSketch(el1)
+  }
+  
+  const sThin = new SKYCAD.Sketch()
+  sThin.moveTo(-D / 2, diagonalStart)
+  sThin.curveTo(D / 2, diagonalStart, {clockwise: true, radius: rad})
+  if (angle>0) layout.addSketch(sThin)
+
+  //inspektionshål
+  const h = rad - Math.sqrt(rad*rad-D*D/4)
+  const rectOffset = 3
+  const angled_rectOffset = rectOffset*Math.cos(Math.PI/180*angle)
+  const widthApproximation = 1 + D / 5
+  const lengthApproximation = ang(widthApproximation * 1.5,angle)
+  const rectPos = diagonalStart + h - lengthApproximation - angled_rectOffset
+
+  if (inspection && angle>0) {
+    layout.addSketch(
+      SKYCAD.generateRectangleSketch(
+        -widthApproximation / 2,
+        rectPos,
+        widthApproximation,
+        lengthApproximation,
+      ),
+      {},
+    )
+  }
+  if (inspection && angle==0) {
+    layout.addSketch(
+      SKYCAD.generateRectangleSketch(
+        -widthApproximation / 2,
+        diagonalStart - lengthApproximation / 3,
+        widthApproximation,
+        lengthApproximation,
+      ),
+      {},
+    )
+  }
+  if (inspection && angle==90) {
+    const widthApproximation = 1 + D / 5
+    const lengthApproximation = (1+D/5)*1.5
+    layout.addSketch(
+      SKYCAD.generateRectangleSketch(
+        -widthApproximation/2,0.2,widthApproximation,lengthApproximation
+      )
+    )
+  }
+  const sThick = new SKYCAD.Sketch()
+  sThick.moveTo(-W / 2, diagonalEnd)
+  sThick.curveTo(W / 2, diagonalEnd, { radius })
+
+  sThick.moveTo(-D / 2, ellipse_offset)
+  sThick.curveTo(D / 2, ellipse_offset, { clockwise: true, radius: W * 2 })
+  sThick.moveTo(-D / 2, diagonalStart)
+  sThick.curveTo(D / 2, diagonalStart, { radius: D / 1.5 })
+  if(angle>0)layout.addSketch(sThin)
+  if (angle == 0) layout.addSketch(sThick)
+  const line = new SKYCAD.Sketch()
+  line.moveTo(100,b1+ellipse_offset)
+  line.lineTo(-100,b1+ellipse_offset)
+  //layout.addSketch(line)
+  const line2 = new SKYCAD.Sketch()
+  line2.moveTo(100,diagonalStart+h)
+  line2.lineTo(-100,diagonalStart+h)
+  //layout.addSketch(line2)
+
+  return layout
+}
+function angsin(x,a){
+  return x*Math.sin(a*Math.PI/180)
+}
+function angled(x,a){
+  return x*Math.cos(a*Math.PI/180)
+}
+function ang(x,a){
+  return x*Math.cos(a*Math.PI/180)
+}
+
+function get_t(W, d, D) {
+const A = Math.PI/4*(D*D - d*d)
+let t = A/W
+//rounding
+t = Math.ceil(10*t)/10
+return t
+}
