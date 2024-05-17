@@ -1,0 +1,97 @@
+// #region import
+import * as KRF_ from './hAtAB5kyzcg/index'
+import * as DRAW from './ldCvppomRxC/index'
+import * as ACTIONS from './actionEvents.js'
+import * as COMPONENTS from './components.js'
+import * as CONSTANTS from './constants.js'
+// #endregion import
+// #region services @dm-autofold
+let Studio: STUDIO.StudioService
+let LoadSave: STUDIO.LoadSaveProjectService
+export function _connectServices(services: {
+  LoadSave: STUDIO.LoadSaveProjectService
+  Studio: STUDIO.StudioService
+}) {
+  LoadSave = services.LoadSave
+  Studio = services.Studio
+}
+// #endregion services
+
+
+
+
+export function onInit() {
+  const myComponent = new KRF_.Component()
+  const configurator = KRF_.generateConfigurator(myComponent)
+
+
+  const componentHandler = Studio.getComponentHandler()
+  componentHandler.add(myComponent)
+  const cameraTarget = new SKYMATH.Vector3D(0, 0, 0)
+  const A = new SKYMATH.Vector3D(0, 0, 200)
+  Studio.setCameraPosition(A)
+  Studio.setCameraTarget(cameraTarget)
+  Studio.setCameraToFitBounds({direction: new SKYMATH.Vector3D(0, 0, -1), travelTime: 1000, boundsOffset: 10})
+  Studio.updateCameraSettings({
+  maxTargetDistance: 1000,
+  minTargetDistance: 0,
+  allowRotate: false,
+  orthographic: false,
+  travelTime:1000
+})
+  
+  const configureTab = new SKYUI.Tab({
+  title: 'Configure',
+  icon: 'cog',
+
+  onInit: () => {
+
+    configurator.addCompletionCallback((valid, values) => {
+      if (valid) {
+          //const tabs = values ? [configureTab] : [configureTab]
+          //Studio.setTabs(tabs) // triggered every time the configurator is updated
+      Studio.requestGeometryUpdate().then(() => {
+      updateCamera()
+    })
+
+         
+      }
+    })
+    const tabContent = [configurator] // could be also [configurator1, button1, button2, configurator2]
+    Studio.setTabContent(tabContent)
+    Studio.requestGeometryUpdate().then(() => {
+      updateCamera()
+    })
+  },
+})
+
+  const exportTab = new SKYUI.Tab({
+    title: 'Export',
+    icon: 'download',
+    onInit: () => {
+      const downloadPdfButton = new SKYUI.Button('Download PDF', async () => {
+  try {
+    const pdfFile = await ACTIONS.generateComponentPdfFile(myComponent)
+    Studio.downloadFile('myDrawing.pdf', pdfFile)
+  } catch (error) {
+    console.error(error)
+    Studio.displayNotification(`Could not generate PDF: ${error.message}`, { type: 'danger' })
+  }
+})
+
+      const tabContent = [downloadPdfButton]
+
+      Studio.setTabContent(tabContent)
+    },
+  })
+
+
+  const tabs = [configureTab, exportTab]
+  Studio.setTabs(tabs)
+}
+
+function updateCamera() {
+  Studio.setCameraToFitBounds({direction: new SKYMATH.Vector3D(0, 0, -1),travelTime: 1000, boundsOffset: 10})
+}
+
+
