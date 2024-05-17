@@ -1,0 +1,77 @@
+// #region import
+import * as ASSETS from './8E9g8iOzk3N/index'
+import * as CONSTANTS from './constants.js'
+import * as GEOM2D from './geom2d.js'
+import * as GEOM3D from './geom3d.js'
+// #endregion import
+
+export interface Properties {
+  D: number,
+  d: number,
+  L: number,
+  W: number,
+  N1:number,
+  N : number,
+  screwDiameter:number
+  holeQty:number
+  CC: number,
+  angle: number,
+  view: string,
+  A: number,
+  t: number,
+  KRF: string,
+  PN: number,
+  O:number,
+  inspection: boolean,
+}
+export class Component extends STUDIO.BaseComponent<Properties> {
+  constructor() {
+    super()
+
+    this.properties = {
+      D: 14.5,
+      d: 11,
+      L: 50,
+      W: 21,
+      N1:11,
+      N : 11,
+      screwDiameter:6,
+      holeQty : 1,
+      CC: 16,
+      angle:0,
+      view: 'top',
+      A:30,
+      t:2.4,
+      KRF: 'KRF-50',
+      PN:11,
+      O:0,
+      inspection: true,
+    }
+  }
+
+
+  generateGeometry() {
+    const {D,d,L,W,N1,N,screwDiameter,holeQty,CC,angle,view,A, t,KRF,PN,O, inspection} = this.getProperties()
+    const DATA = ASSETS.DATASETS.DATA
+    console.log(DATA)
+    const KRF_data = DATA.find((row) => {
+      return row.KRF_TYPE === 'KRF-50'
+      })
+    console.log(KRF_data)
+
+
+    const geometryGroup = new SKYCAD.GeometryGroup()
+    if (view == 'top'){
+    const layoutFront = GEOM2D.generateTopLayout(GEOM2D.getData(this.getProperties())) 
+    layoutFront.addLayout(GEOM2D.generateTopDrawingDimensions(GEOM2D.getData(this.getProperties())))
+    geometryGroup.addGeometry(layoutFront)
+  }
+    else if (view == 'side'){
+    const layoutSide = GEOM2D.generateSideLayout(GEOM2D.getSideData(this.getProperties())) 
+    layoutSide.addLayout(GEOM2D.generateSideDrawingDimensions(GEOM2D.getSideData(this.getProperties())))
+    geometryGroup.addGeometry(layoutSide)
+    }
+  return geometryGroup
+  }
+
+}
