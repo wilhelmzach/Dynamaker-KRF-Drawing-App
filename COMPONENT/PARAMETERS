@@ -1,0 +1,374 @@
+// #region import
+import * as ASSETS from './8E9g8iOzk3N/index'
+import * as CONSTANTS from './constants.js'
+import * as COMPONENT from './component.js'
+// #endregion import
+1// #region import
+
+export function generateConfigurator(component: COMPONENT.Component): SKYPARAM.Configurator {
+  const {D,d,L,W,N1,N,screwDiameter,holeQty,CC, angle,view,A,KRF,t,PN,O, inspection} = component.getProperties()
+  const DATA = ASSETS.DATASETS.DATA
+  const KRF_parameter = SKYPARAM.generateDropdown('KRF', 'Type', [
+    new SKYPARAM.DropdownItem('KRF-25', 'KRF-25'),
+    new SKYPARAM.DropdownItem('KRF-50','KRF-50'),
+    new SKYPARAM.DropdownItem('KRF-70', 'KRF-70'),
+    new SKYPARAM.DropdownItem('KRF-95', 'KRF-95'),
+    new SKYPARAM.DropdownItem('KRF-120', 'KRF-120'),
+    new SKYPARAM.DropdownItem('KRF-150', 'KRF-150'),
+    new SKYPARAM.DropdownItem('KRF-185', 'KRF-185'),
+  ])
+  KRF_parameter.setValue(KRF)
+  const inspection_parameter = SKYPARAM.generateCheckbox('inspection', 'Inspection hole', {
+    defaultValue: inspection,
+  })
+
+  const A_Parameter = SKYPARAM.generateSlider('A', 'A', {
+    defaultValue: A,
+    maxValue: 82, 
+    minValue: 29.5,
+    stepSize: 0.1,
+    unit: 'mm'
+  })
+    const D_Parameter = SKYPARAM.generateSlider('D' , 'D', {
+    defaultValue: D,
+    maxValue: 100, 
+    minValue: 0,
+    stepSize: 0.01,
+    unit: 'mm'
+  })
+  D_Parameter.setVisible(false)
+  const d_Parameter = SKYPARAM.generateSlider('d' , 'd', {
+    defaultValue: d,
+    maxValue: 100, 
+    minValue: 0,
+    stepSize: 0.01,
+    unit: 'mm'
+  })
+  d_Parameter.setVisible(false)
+  const O_Parameter = SKYPARAM.generateSlider('O' , 'O', {
+    defaultValue: O,
+    maxValue: 30, 
+    minValue: 0,
+    stepSize: 0.1,
+    unit: 'mm'
+  })
+  const W_Parameter = SKYPARAM.generateSlider('W', 'Width', {
+    defaultValue: W,
+    maxValue: 27,
+    minValue: 18,
+    stepSize: 1,
+    unit: 'mm',
+  })
+  const N1_Parameter = SKYPARAM.generateSlider('N1', 'N1', {
+    defaultValue: N1,
+    maxValue: 65,
+    minValue: 6,
+    stepSize: 0.1,
+    unit: 'mm',
+  })
+  const N_Parameter = SKYPARAM.generateSlider('N', 'N', {
+    defaultValue: N,
+    maxValue: 30,
+    minValue: 6,
+    stepSize: 0.5,
+    unit: 'mm',
+  })
+  const PN_Parameter = SKYPARAM.generateSlider('PN', 'P', {
+    defaultValue: N,
+    maxValue: 30,
+    minValue: 6,
+    stepSize: 0.5,
+    unit: 'mm',
+  })
+  
+  const holeQty_Parameter = SKYPARAM.generateDropdown('holeQty', 'Number of holes', [
+    new SKYPARAM.DropdownItem('0 holes',0),
+    new SKYPARAM.DropdownItem('1 hole',1),
+    new SKYPARAM.DropdownItem('2 holes',2)
+  ])
+  holeQty_Parameter.setValue(holeQty)
+    const view_Parameter = SKYPARAM.generateDropdown('view', 'view', [
+    new SKYPARAM.DropdownItem('Top view','top'),
+    new SKYPARAM.DropdownItem('Side view','side'),
+  ])
+  view_Parameter.setValue(view)
+  const screwDiameter_Parameter = SKYPARAM.generateDropdown('screwDiameter', 'Screw (M)', [
+    new SKYPARAM.DropdownItem('M4',4),
+    new SKYPARAM.DropdownItem('M5',5),
+    new SKYPARAM.DropdownItem('M6',6),
+    new SKYPARAM.DropdownItem('M8',8),
+    new SKYPARAM.DropdownItem('M10',10),
+    new SKYPARAM.DropdownItem('M12',12),
+    new SKYPARAM.DropdownItem('M14',14),
+    new SKYPARAM.DropdownItem('M16',16),
+    new SKYPARAM.DropdownItem('M18',18,{disabled:true}),
+    new SKYPARAM.DropdownItem('M20',20,{disabled:true}),
+    new SKYPARAM.DropdownItem('M22',22,{disabled:true}),
+    new SKYPARAM.DropdownItem('M30',30,{disabled:true}),
+  ])
+  screwDiameter_Parameter.setValue(screwDiameter)
+
+   const CC_Parameter = SKYPARAM.generateSlider('CC', 'CC', {
+    defaultValue: CC,
+    maxValue: 50,
+    minValue: 12,
+    stepSize: 0.5,
+    unit: 'mm',
+  })
+  const angle_Parameter = SKYPARAM.generateSlider('angle', 'angle', {
+    defaultValue: angle,
+    maxValue: 90,
+    minValue: 0,
+    stepSize: 0.5,
+    unit: 'degrees',
+  })
+
+  const configurator = new SKYPARAM.Configurator([
+    KRF_parameter,
+    view_Parameter,
+    holeQty_Parameter,
+    screwDiameter_Parameter,
+    inspection_parameter,
+    angle_Parameter,
+    W_Parameter,
+    N1_Parameter,
+    N_Parameter,
+    CC_Parameter,
+    A_Parameter,
+    O_Parameter,
+    PN_Parameter,
+    d_Parameter
+    ,
+    D_Parameter
+    ])
+
+
+
+  /*configurator.setUpdateRule('screwDiameter', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const max_radius = get_max_radius(values['W'],values['N'],values['N1'],values['CC'],values['holeQty'])
+      if (values['holeQty'] ==0 ) {parameter.setVisible(false)}
+      else {parameter.setVisible(true)}
+      let val = value
+      if(val>max_radius){val = max_radius}
+      parameter.setItems(getScrewOptions(values['W'],values['N'],values['N1'],values['CC'],values['holeQty']))
+      parameter.setValue(val)
+    }
+    else if (directUpdate){
+      component.update_O()
+    }
+  })*/
+    configurator.setUpdateRule('d', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'],DATA)
+      parameter.setValue(data.d)
+    }})    
+    configurator.setUpdateRule('D', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'],DATA)
+      parameter.setValue(data.D)
+    }})
+    configurator.setUpdateRule('N', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'],DATA)
+      const max = data.N_max
+      let min = data.N_min
+      if (get_bricka(values['screwDiameter'],DATA)/2 > min) {min = get_bricka(values['screwDiameter'],DATA)/2} 
+      console.log('hej')
+      console.log(values['KRF'])     
+      if (value<min) parameter.setValue(min)
+      if (value > max) parameter.setValue(max)
+      parameter.setMin(min)
+      parameter.setMax(max)
+
+      parameter.setVisible(true)
+      if(values['holeQty'] == 0) {parameter.setVisible(false)}
+    }})
+    configurator.setUpdateRule('screwDiameter', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'],DATA)
+      let val = value
+      if (data.screw_max<value) val = data.screw_max
+      else if (data.screw_min>value) val = data.screw_min
+      parameter.setItems(getScrewOptions(values['KRF'],DATA))
+      parameter.setValue(val)
+    }})
+  configurator.setUpdateRule('PN', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const max = values['W']*2
+      const min = Math.ceil(values['W']/3) + 5
+      if (value<min) parameter.setValue(min)
+      if (value>max) parameter.setValue(max)
+      parameter.setMin(min)
+      parameter.setMax(max)
+
+      parameter.setVisible(true)
+      if(values['holeQty'] != 0) {parameter.setVisible(false)}
+    }})
+  configurator.setUpdateRule('A', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'],DATA)
+      const min = data.A_min
+      const max = data.A_max
+      if (value<min) parameter.setValue(min)
+      if (value>max) parameter.setValue(max)
+      parameter.setMin(min)
+      parameter.setMax(max)
+    }})
+
+  configurator.setUpdateRule('CC', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      const data = get_data(values['KRF'], DATA)
+      const max = data.CC_max
+      let min = data.CC_min
+      if (get_bricka(values['screwDiameter'], DATA) > min) {min = get_bricka(values['screwDiameter'], DATA)}
+      if (value<min) parameter.setValue(min)
+      if (value>max) {parameter.setValue(max)}
+      parameter.setMin(min)
+      parameter.setMax(max)
+
+      if (values['holeQty'] < 2) {parameter.setVisible(false)}
+      else {parameter.setVisible(true)}
+      
+  }})
+  configurator.setUpdateRule('N1', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+    const data = get_data(values['KRF'], DATA)
+    const max = data.N1_max
+    let min = data.N1_min
+    if (get_bricka(values['screwDiameter'],DATA)/2 > min) {min = get_bricka(values['screwDiameter'],DATA)/2}
+    if (min > max) {min = max}
+    if (value<min) parameter.setValue(min)
+    if (value>max) parameter.setValue(max)
+    parameter.setMin(min)
+    parameter.setMax(max)
+    if(values['holeQty']>0){parameter.setVisible(true)}
+    else {parameter.setVisible(false)}
+  }})
+  configurator.setUpdateRule('W', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+    const data = get_data(values['KRF'], DATA)
+    const max = data.W_max
+    let min = data.W_min
+    const marginal = get_marginal(values['KRF'])
+    if (marginal + values['screwDiameter'] > min) {min = marginal + values['screwDiameter']}
+    if (min > max) {min = max}
+    if (value<min) parameter.setValue(min)
+    if (value>max) parameter.setValue(max)
+    parameter.setMin(min)
+    parameter.setMax(max)
+  }})
+      configurator.setUpdateRule('O', (value, directUpdate, parameter, values) => {
+    if (!directUpdate) {
+      parameter.setVisible(true)
+      if (values['holeQty'] == 0) {parameter.setVisible(false)}
+  }})
+  configurator.addCompletionCallback((valid, values) => {
+    if (valid) {
+     component.setProperties(values)
+    }
+  })
+  return configurator
+}
+/*function getScrewOptions(W,N,N1,CC,holeQTY){
+  const max_radius = get_max_radius(W,N,N1,CC,holeQTY)
+  const isdisabled = [false,false,false,false,false,false,false,false]
+  for (let i = 0; i < 8; i++) {
+  const m = 2*i+6
+  if(max_radius< m){isdisabled[i] = true}
+  }
+  return[
+    new SKYPARAM.DropdownItem('M6',6,{disabled:isdisabled[0]}),
+    new SKYPARAM.DropdownItem('M8',8,{disabled:isdisabled[1]}),
+    new SKYPARAM.DropdownItem('M10',10,{disabled:isdisabled[2]}),
+    new SKYPARAM.DropdownItem('M12',12,{disabled:isdisabled[3]}),
+    new SKYPARAM.DropdownItem('M14',14,{disabled:isdisabled[4]}),
+    new SKYPARAM.DropdownItem('M16',16,{disabled:isdisabled[5]}),
+  ]
+}
+function get_max_radius(W,N,N1,CC,holeQTY){
+  console.log(N)
+  if (holeQTY == 2) {return Math.floor((Math.min(W,2*N,2*N1,CC)-2)/2)*2}
+  else if (holeQTY == 1){return Math.floor((Math.min(W,2*N,2*N1)-2)/2)*2}
+  else return 22
+}*/
+function get_bricka(screw,DATA){
+
+  if (screw == 4) return 8
+  if (screw == 5) return 10
+  if (screw ==6) return 12
+  if (screw == 8) return 16
+  if (screw == 10) return 22
+  if (screw == 12) return 26
+  if (screw == 14) return 26
+  if (screw == 16) return 30
+  if (screw == 18) return 34
+  if (screw == 20) return 36
+  if (screw == 22) return 40
+  if (screw == 30) return 58
+  else return 12
+}
+
+function get_marginal(KRF) {
+  //kanske kan ta detta från datablad också
+  if (KRF == 'KRF-25') return 6
+  if (KRF == 'KRF-50') return 6
+  if (KRF == 'KRF-50') return 10
+  if (KRF == 'KRF-95') return 11
+  if (KRF == 'KRF-120') return 12
+  if (KRF == 'KRF-150') return 16
+  if (KRF == 'KRF-185') return 14
+
+  else return 0
+}
+
+//skicka in tex modell = 'KRF-50'
+export function get_data(KRF,DATA){
+    const KRF_data = DATA.find((row) => {
+      return row.KRF_TYPE === KRF
+      })
+      return KRF_data
+}
+function getScrewOptions(KRF,DATA){
+  const data = get_data(KRF,DATA)
+  //const isdisabled = [M4;false,false,false,false,false,false,false,false,false,false]
+  let isdisabled = {'M4':false,
+    'M5':false,
+    'M6':false,
+    'M8':false,
+    'M10':false,
+    'M12':false,
+    'M14':false,
+    'M16':false,
+    'M18':false,
+    'M20':false,
+    'M22':false,
+    'M30':false}
+  if (data.M4 == 0) isdisabled.M4 = true
+  if (data.M5==0) isdisabled.M5 = true
+  if (data.M6 == 0) isdisabled.M6 = true
+  if (data.M6 == 0) isdisabled.M6 = true
+  if (data.M8 == 0) isdisabled.M8 = true
+  if (data.M10 == 0) isdisabled.M10 = true
+  if (data.M12 == 0) isdisabled.M12 = true
+  if (data.M14 == 0) isdisabled.M14 = true
+  if (data.M16 == 0) isdisabled.M16 = true
+  if (data.M18 == 0) isdisabled.M18 = true
+  if (data.M20 == 0) isdisabled.M20 = true
+  if (data.M22==0) isdisabled.M22 = true
+  if (data.M30==0) isdisabled.M30 = true
+  return[
+    new SKYPARAM.DropdownItem('M4',4,{disabled:isdisabled.M4}),
+    new SKYPARAM.DropdownItem('M5',5,{disabled:isdisabled.M5}),
+    new SKYPARAM.DropdownItem('M6',6,{disabled:isdisabled.M6}),
+    new SKYPARAM.DropdownItem('M8',8,{disabled:isdisabled.M8}),
+    new SKYPARAM.DropdownItem('M10',10,{disabled:isdisabled.M10}),
+    new SKYPARAM.DropdownItem('M12',12,{disabled:isdisabled.M12}),
+    new SKYPARAM.DropdownItem('M14',14,{disabled:isdisabled.M14}),
+    new SKYPARAM.DropdownItem('M16',16,{disabled:isdisabled.M16}),
+    new SKYPARAM.DropdownItem('M18',18,{disabled:isdisabled.M18}),
+    new SKYPARAM.DropdownItem('M20',20,{disabled:isdisabled.M20}),
+    new SKYPARAM.DropdownItem('M22',22,{disabled:isdisabled.M22}),
+    new SKYPARAM.DropdownItem('M30',30,{disabled:isdisabled.M30}),
+  ]
+}
